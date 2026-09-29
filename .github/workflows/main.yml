@@ -5,7 +5,14 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
-  workflow_dispatch:            # adds a "Run workflow" button
+  workflow_dispatch:
+    inputs:                          # ← NEW: the form fields
+      name:
+        description: 'Who to greet'
+        default: 'Flash'
+      level:
+        type: choice
+        options: [info, debug]
 
 jobs:
   hello:
