@@ -1,0 +1,12 @@
+name: Hello action
+description: Greets someone
+inputs:
+  MY_NAME:
+    description: Who to greet
+    default: World
+outputs:
+  time:
+    description: When the greeting happened
+runs:
+  using: docker
+  image: Dockerfile

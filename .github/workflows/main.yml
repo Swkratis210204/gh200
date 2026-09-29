@@ -1,0 +1,32 @@
+name: Practice workflow
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:            # adds a "Run workflow" button
+
+jobs:
+  hello:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4          # get the repo's code onto the runner
+      - id: greet
+        uses: ./action-a                   # run the local container action
+        with:
+          MY_NAME: "Flash"                 # pass the input
+      - run: echo "Output from action -> ${{ steps.greet.outputs.time }}"
+      - run: cat greeting.txt              # the file the container wrote
+
+  info:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Event=${{ github.event_name }} Branch=${{ github.ref_name }} Commit=${{ github.sha }}"
+      - run: ls -la                        # empty: no checkout in this job
+
+  after:
+    needs: [hello, info]
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "I only run after hello and info succeed"
