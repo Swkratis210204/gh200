@@ -1,0 +1,24 @@
+name: Matrix practice
+
+on: workflow_dispatch          # only runs when you click the button
+
+jobs:
+  greet-many:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        person: [Mona, Flash, Octocat]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./action-a
+        with:
+          MY_NAME: ${{ matrix.person }}
+
+  os-check:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        version: [1, 2]
+    steps:
+      - run: echo "Running on ${{ matrix.os }} with version ${{ matrix.version }}"
