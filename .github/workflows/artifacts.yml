@@ -1,0 +1,51 @@
+name: Artifacts practice
+
+on: workflow_dispatch
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - id: greet
+        uses: ./action-a              # your action writes greeting.txt
+        with:
+          MY_NAME: "Flash"
+
+      - name: Create build output
+        run: |
+          mkdir dist
+          mv greeting.txt dist/
+          echo "version 1.0" > dist/version.txt
+          ls -la dist
+
+      - name: Upload build output
+        uses: actions/upload-artifact@v4
+        with:
+          name: my-build
+          path: dist/
+          retention-days: 5
+
+  test:
+    needs: build                      # wait for the upload to finish
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download build output
+        uses: actions/download-artifact@v4
+        with:
+          name: my-build              # must match the upload name
+          path: dist
+
+      - name: Test the build
+        run: |
+          ls -la dist
+          cat dist/greeting.txt
+          grep "Hello Flash" dist/greeting.txt   # fails the step if the text is missing
+          echo "✅ Test passed"
+
+  no-artifact:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          ls -la dist || echo "❌ No dist folder here: files don't travel between jobs"
