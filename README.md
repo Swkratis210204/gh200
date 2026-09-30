@@ -12,7 +12,10 @@ Hands-on workflows built while preparing for the GH-200 certification.
 ├── reusable-greet.yml   # Experiment 4 (reusable workflow)
 ├── call-reusable.yml    # Experiment 4 (caller)
 ├── conditions.yml       # Experiment 5
-└── pr.yml               # Experiment 6
+├── pr.yml               # Experiment 6
+└── env.yml              # Experiment 7
+.github/scripts/
+└── deploy.sh            # Script used by Experiment 7
 action-a/                # Custom Docker container action
 ├── action.yml
 ├── Dockerfile
@@ -79,3 +82,10 @@ Used from a workflow like this:
 - **`pr-info`**: prints the activity (`github.event.action`), PR number, title, source and target branch (`head_ref` → `base_ref`), and whether it was merged.
 - The PR title is passed through `env:` instead of being put directly into `run:`, to prevent script injection.
 - Tested with a real PR from `test-pr` into `main`: synchronize (new commit), closed, reopened, and closed with merged = true. The `main.yml` checks also ran on the PR (pull_request) and after the merge (push).
+
+### 7. `env.yml`: variables, secrets and environments
+
+- **Settings used:** repository variable `APP_NAME` and secret `API_KEY`; environment `staging` (1-minute wait timer, `SERVER_URL`); environment `production` (required reviewer, `main` branch only, its own `SERVER_URL` and `API_KEY`).
+- **`variables`**: shows the three `env` scopes and that the most specific wins (step > job > workflow), default variables vs contexts (`$GITHUB_REF_NAME` vs `github.ref_name`), setting a value at run time with `$GITHUB_ENV` (visible only in later steps), and reading `vars` and a masked secret. `vars.SERVER_URL` is empty here because the job has no environment.
+- **`deploy-staging`**: `environment: staging` waits 1 minute, then runs `.github/scripts/deploy.sh` with staging's `SERVER_URL`, passed to the script through `env:`.
+- **`deploy-production`**: `environment: production` with a `url`; only allowed from `main` and waits for manual approval. Uses production's `SERVER_URL`, and its `API_KEY` overrides the repository secret of the same name (confirmed by the secret's length).
