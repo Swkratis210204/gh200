@@ -22,32 +22,37 @@ jobs:
           echo "Build OK"
 
       - name: Only if everything succeeded
-        run: echo "✅ Build succeeded"
+        run: |
+          echo "✅ Build succeeded"
 
-    - name: Only if something failed
+      - name: Only if something failed
         if: failure()
         run: |
           echo "🚨 Sending alert: build is broken"
 
       - name: Always
         if: always()
-        run: echo "🧹 Cleanup runs no matter what"
+        run: |
+          echo "🧹 Cleanup runs no matter what"
 
   flaky:
     runs-on: ubuntu-latest
     steps:
       - name: Flaky step (allowed to fail)
         continue-on-error: true
-        run: exit 1
+        run: |
+          exit 1
 
       - name: Next step
-        run: echo "Still running after the flaky step"
+        run: |
+          echo "Still running after the flaky step"
 
   deploy:
     needs: build
     runs-on: ubuntu-latest
     steps:
-      - run: echo "🚀 Deploying"
+      - run: |
+          echo "🚀 Deploying"
 
   report:
     needs: [build, deploy]
@@ -62,4 +67,5 @@ jobs:
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
-      - run: echo "This only runs on push"
+      - run: |
+          echo "This only runs on push"
