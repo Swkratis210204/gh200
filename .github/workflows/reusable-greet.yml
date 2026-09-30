@@ -1,0 +1,24 @@
+name: Reusable greet
+
+on:
+  workflow_call:                     # makes this workflow callable by others
+    inputs:
+      name:
+        type: string
+        required: true
+    outputs:
+      time:
+        description: When the greeting happened
+        value: ${{ jobs.greet.outputs.time }}   # pass the job output up to the caller
+
+jobs:
+  greet:
+    runs-on: ubuntu-latest
+    outputs:
+      time: ${{ steps.hello.outputs.time }}      # pass the step output up to the job
+    steps:
+      - uses: actions/checkout@v4
+      - id: hello
+        uses: ./action-a
+        with:
+          MY_NAME: ${{ inputs.name }}

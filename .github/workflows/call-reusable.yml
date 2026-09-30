@@ -1,0 +1,22 @@
+name: Call reusable
+
+on: workflow_dispatch
+
+jobs:
+  greet-mona:
+    uses: ./.github/workflows/reusable-greet.yml
+    with:
+      name: Mona
+
+  greet-flash:
+    uses: ./.github/workflows/reusable-greet.yml
+    with:
+      name: Flash
+
+  show-results:
+    needs: [greet-mona, greet-flash]
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          echo "Mona was greeted at  ${{ needs.greet-mona.outputs.time }}"
+          echo "Flash was greeted at ${{ needs.greet-flash.outputs.time }}"
