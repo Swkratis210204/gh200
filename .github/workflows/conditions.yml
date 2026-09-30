@@ -1,0 +1,65 @@
+name: Conditions practice
+
+on:
+  workflow_dispatch:
+    inputs:
+      break_build:
+        description: 'Make the build fail?'
+        type: boolean
+        default: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Build
+        run: |
+          echo "Building..."
+          if [ "${{ inputs.break_build }}" = "true" ]; then
+            echo "Build failed!"
+            exit 1
+          fi
+          echo "Build OK"
+
+      - name: Only if everything succeeded
+        run: echo "✅ Build succeeded"
+
+    - name: Only if something failed
+        if: failure()
+        run: |
+          echo "🚨 Sending alert: build is broken"
+
+      - name: Always
+        if: always()
+        run: echo "🧹 Cleanup runs no matter what"
+
+  flaky:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Flaky step (allowed to fail)
+        continue-on-error: true
+        run: exit 1
+
+      - name: Next step
+        run: echo "Still running after the flaky step"
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "🚀 Deploying"
+
+  report:
+    needs: [build, deploy]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          echo "build result  = ${{ needs.build.result }}"
+          echo "deploy result = ${{ needs.deploy.result }}"
+
+  only-on-push:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "This only runs on push"
