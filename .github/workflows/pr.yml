@@ -1,0 +1,20 @@
+name: PR practice
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
+
+jobs:
+  pr-info:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Show PR details
+        env:
+          TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          echo "Activity : ${{ github.event.action }}"
+          echo "PR number: ${{ github.event.pull_request.number }}"
+          echo "Title    : $TITLE"
+          echo "From     : ${{ github.head_ref }}"
+          echo "Into     : ${{ github.base_ref }}"
+          echo "Merged   : ${{ github.event.pull_request.merged }}"
