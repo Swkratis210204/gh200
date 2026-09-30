@@ -14,9 +14,11 @@ Hands-on workflows built while preparing for the GH-200 certification.
 ├── conditions.yml       # Experiment 5
 ├── pr.yml               # Experiment 6
 ├── env.yml              # Experiment 7
-└── cd.yml               # Experiment 8
+├── cd.yml               # Experiment 8
+└── script.yml           # Experiment 9
 .github/scripts/
-└── deploy.sh            # Script used by Experiment 7
+├── deploy.sh            # Script used by Experiment 7
+└── triage.js            # Script used by Experiment 9
 site/
 └── index.html           # Web page deployed by Experiment 8
 action-a/                # Custom Docker container action
@@ -99,3 +101,11 @@ Used from a workflow like this:
 - **`build`**: runs only on a manual run or when the PR has the `stage` label (`contains(github.event.pull_request.labels.*.name, 'stage')`). Copies `site/index.html` into `dist/`, stamps it with the commit ID and time, and uploads it with `upload-pages-artifact`.
 - **`deploy`**: `needs: build`; deploys to the `github-pages` environment with `deploy-pages`, and shows the site URL on the run.
 - Tested with PR `feature-page` → `main`: no deployment on open; adding the `stage` label deployed the PR's version of the page; adding another label redeployed (because `stage` was still present); with `stage` removed, the jobs were skipped.
+
+### 9. `script.yml`: GitHub Script
+
+- **Trigger:** `issues` with `types: [opened]`; `permissions: issues: write` so the token can comment and label.
+- **Thank the author**: an inline `actions/github-script` step that posts a thank-you comment with `github.rest.issues.createComment`, reading the issue from `context.payload.issue`. The title is read as data in JavaScript, not pasted in with `${{ }}`, so it's safe from script injection.
+- **Triage**: loads `.github/scripts/triage.js` with `require()` (needs checkout) and passes it `github`, `context` and `core`. The script adds the `bug` label if the title contains "bug" and returns `bug` or `other`.
+- **Use the result**: prints the returned value from `steps.triage.outputs.result` (`result-encoding: string`).
+- Tested with two issues: "Login page is broken" got a comment only; "Bug: button does nothing" got a comment and the `bug` label.
