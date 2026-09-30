@@ -6,10 +6,14 @@ Hands-on workflows built while preparing for the GH-200 certification.
 
 ```
 .github/workflows/
-├── main.yml         # Experiment 1
-├── matrix.yml       # Experiment 2
-└── artifacts.yml    # Experiment 3
-action-a/            # Custom Docker container action
+├── main.yml             # Experiment 1
+├── matrix.yml           # Experiment 2
+├── artifacts.yml        # Experiment 3
+├── reusable-greet.yml   # Experiment 4 (reusable workflow)
+├── call-reusable.yml    # Experiment 4 (caller)
+├── conditions.yml       # Experiment 5
+└── pr.yml               # Experiment 6
+action-a/                # Custom Docker container action
 ├── action.yml
 ├── Dockerfile
 └── entrypoint.sh
@@ -54,6 +58,24 @@ Used from a workflow like this:
 - **`test`**: waits for `build`, downloads `my-build` onto a fresh runner, and checks the content with `grep`.
 - **`no-artifact`**: has no download, so `dist/` doesn't exist there. Files only move between jobs through artifacts.
 
-### 4. Reusable workflows
-### 5. Conditionals
+### 4. `reusable-greet.yml` + `call-reusable.yml`: reusable workflows
 
+- **`reusable-greet.yml`**: made callable with `on: workflow_call`. Takes the input `name`, runs `action-a` with it, and returns the output `time`, passed up from step → job → workflow.
+- **`call-reusable.yml`**: calls the reusable workflow twice at the job level (`uses: ./.github/workflows/reusable-greet.yml`), once with `Mona` and once with `Flash`. The two calls run in parallel.
+- **`show-results`**: waits for both calls and prints their returned values with `needs.<job>.outputs.time`.
+
+### 5. `conditions.yml`: conditionals and failure handling
+
+- **Trigger:** `workflow_dispatch` with a boolean input `break_build` that makes the build fail on purpose.
+- **`build`**: shows step conditions. The default `success()` step is skipped after a failure, `if: failure()` sends an alert, and `if: always()` runs clean-up regardless.
+- **`flaky`**: a failing step with `continue-on-error: true`; the job still passes.
+- **`deploy`**: `needs: build`, so it's skipped when the build fails.
+- **`report`**: `if: always()` at job level; prints each job's result with `needs.<job>.result`.
+- **`only-on-push`**: `if: github.event_name == 'push'`, so it's skipped on manual runs.
+
+### 6. `pr.yml`: pull request events
+
+- **Trigger:** `pull_request` with `types: [opened, synchronize, reopened, closed]`.
+- **`pr-info`**: prints the activity (`github.event.action`), PR number, title, source and target branch (`head_ref` → `base_ref`), and whether it was merged.
+- The PR title is passed through `env:` instead of being put directly into `run:`, to prevent script injection.
+- Tested with a real PR from `test-pr` into `main`: synchronize (new commit), closed, reopened, and closed with merged = true. The `main.yml` checks also ran on the PR (pull_request) and after the merge (push).
