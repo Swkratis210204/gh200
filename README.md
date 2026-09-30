@@ -13,9 +13,12 @@ Hands-on workflows built while preparing for the GH-200 certification.
 ├── call-reusable.yml    # Experiment 4 (caller)
 ├── conditions.yml       # Experiment 5
 ├── pr.yml               # Experiment 6
-└── env.yml              # Experiment 7
+├── env.yml              # Experiment 7
+└── cd.yml               # Experiment 8
 .github/scripts/
 └── deploy.sh            # Script used by Experiment 7
+site/
+└── index.html           # Web page deployed by Experiment 8
 action-a/                # Custom Docker container action
 ├── action.yml
 ├── Dockerfile
@@ -89,3 +92,10 @@ Used from a workflow like this:
 - **`variables`**: shows the three `env` scopes and that the most specific wins (step > job > workflow), default variables vs contexts (`$GITHUB_REF_NAME` vs `github.ref_name`), setting a value at run time with `$GITHUB_ENV` (visible only in later steps), and reading `vars` and a masked secret. `vars.SERVER_URL` is empty here because the job has no environment.
 - **`deploy-staging`**: `environment: staging` waits 1 minute, then runs `.github/scripts/deploy.sh` with staging's `SERVER_URL`, passed to the script through `env:`.
 - **`deploy-production`**: `environment: production` with a `url`; only allowed from `main` and waits for manual approval. Uses production's `SERVER_URL`, and its `API_KEY` overrides the repository secret of the same name (confirmed by the secret's length).
+
+### 8. `cd.yml`: continuous deployment to GitHub Pages
+
+- **Triggers:** `pull_request` with `types: [labeled]`, plus `workflow_dispatch`. Uses OIDC (`id-token: write`) and `pages: write` instead of stored credentials.
+- **`build`**: runs only on a manual run or when the PR has the `stage` label (`contains(github.event.pull_request.labels.*.name, 'stage')`). Copies `site/index.html` into `dist/`, stamps it with the commit ID and time, and uploads it with `upload-pages-artifact`.
+- **`deploy`**: `needs: build`; deploys to the `github-pages` environment with `deploy-pages`, and shows the site URL on the run.
+- Tested with PR `feature-page` → `main`: no deployment on open; adding the `stage` label deployed the PR's version of the page; adding another label redeployed (because `stage` was still present); with `stage` removed, the jobs were skipped.
